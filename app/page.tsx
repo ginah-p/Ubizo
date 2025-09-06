@@ -1,116 +1,191 @@
 "use client";
 
-import {
-  useMiniKit,
-  useAddFrame,
-  useOpenUrl,
-} from "@coinbase/onchainkit/minikit";
-import {
-  Name,
-  Identity,
-  Address,
-  Avatar,
-  EthBalance,
-} from "@coinbase/onchainkit/identity";
-import {
-  ConnectWallet,
-  Wallet,
-  WalletDropdown,
-  WalletDropdownDisconnect,
-} from "@coinbase/onchainkit/wallet";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { Button } from "./components/DemoComponents";
-import { Icon } from "./components/DemoComponents";
-import { Home } from "./components/DemoComponents";
-import { Features } from "./components/DemoComponents";
+import { useState, useEffect, useCallback, ReactNode } from "react";
+import { useAccount } from "wagmi";
 
-export default function App() {
-  const { setFrameReady, isFrameReady, context } = useMiniKit();
-  const [frameAdded, setFrameAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState("home");
+// ----- Inline Types -----
+type TrustedContact = { name: string; phone: string };
+type SafetyCircle = { ownerFid: string; contacts: TrustedContact[] };
+type SOSPayload = { fid: string; location: { latitude: number; longitude: number }; timestamp: number };
 
-  const addFrame = useAddFrame();
-  const openUrl = useOpenUrl();
+// ----- Minimal Components -----
+const Card = ({ title, children }: { title?: string; children: ReactNode }) => (
+  <div className="p-4 border rounded shadow mb-4">
+    {title && <h2 className="font-bold mb-2">{title}</h2>}
+    {children}
+  </div>
+);
+
+const Button = ({ children, onClick, variant, size, disabled }: { children: ReactNode; onClick: () => void; variant?: string; size?: string; disabled?: boolean }) => (
+  <button
+    onClick={onClick}
+    disabled={disabled}
+    className={`px-4 py-2 rounded ${
+      variant === "primary" ? "bg-blue-500 text-white" : "bg-gray-200"
+    } ${size === "lg" ? "text-lg" : "text-base"} ${disabled ? "opacity-50" : ""}`}
+  >
+    {children}
+  </button>
+);
+
+const Input = (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} className="border p-2 rounded w-full" />;
+const Label = ({ children, ...props }: React.LabelHTMLAttributes<HTMLLabelElement> & { children: ReactNode }) => <label {...props} className="block mb-1">{children}</label>;
+
+// ----- Main App -----
+function UbizoApp() {
+  const { address } = useAccount();
+  const [trustedContacts, setTrustedContacts] = useState<TrustedContact[]>([]);
+  const [newContactName, setNewContactName] = useState("");
+  const [newContactPhone, setNewContactPhone] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fid = address;
+
+  const fetchSafetyCircle = useCallback(async () => {
+    if (!fid) return;
+    try {
+      const response = await fetch(`/api/safety-circle?fid=${fid}`);
+      if (response.ok) {
+        const data = await response.json();
+        setTrustedContacts(data.contacts || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch safety circle", e);
+    }
+  }, [fid]);
 
   useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
+    fetchSafetyCircle();
+  }, [fetchSafetyCircle]);
+
+  const handleAddContact = () => {
+    if (newContactName && newContactPhone) {
+      setTrustedContacts([...trustedContacts, { name: newContactName, phone: newContactPhone }]);
+      setNewContactName("");
+      setNewContactPhone("");
     }
-  }, [setFrameReady, isFrameReady]);
+  };
 
-  const handleAddFrame = useCallback(async () => {
-    const frameAdded = await addFrame();
-    setFrameAdded(Boolean(frameAdded));
-  }, [addFrame]);
+  const handleRemoveContact = (index: number) => {
+    setTrustedContacts(trustedContacts.filter((_, i) => i !== index));
+  };
 
-  const saveFrameButton = useMemo(() => {
-    if (context && !context.client.added) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAddFrame}
-          className="text-[var(--app-accent)] p-4"
-          icon={<Icon name="plus" size="sm" />}
-        >
-          Save Frame
-        </Button>
-      );
+  const handleSaveCircle = async () => {
+    if (!fid) {
+      alert("User not authenticated");
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const circle: SafetyCircle = { ownerFid: fid, contacts: trustedContacts };
+      const response = await fetch("/api/safety-circle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fid, circle }),
+      });
+      if (response.ok) alert("Safety circle saved!");
+      else alert("Failed to save safety circle.");
+    } catch (e) {
+      alert("An error occurred.");
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSOS = async () => {
+    if (!fid) {
+      alert("User not authenticated");
+      return;
     }
 
-    if (frameAdded) {
-      return (
-        <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
-          <Icon name="check" size="sm" className="text-[#0052FF]" />
-          <span>Saved</span>
-        </div>
-      );
-    }
+    const mockLocation = { latitude: 34.0522, longitude: -118.2437 };
+    const payload: SOSPayload = { fid, location: mockLocation, timestamp: Date.now() };
 
-    return null;
-  }, [context, frameAdded, handleAddFrame]);
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/sos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json();
+      if (response.ok) alert("SOS sent! Transaction: " + result.txHash?.slice(0, 10));
+      else alert("Failed to send SOS.");
+    } catch (e) {
+      alert("An error occurred while sending SOS.");
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
-      <div className="w-full max-w-md mx-auto px-4 py-3">
-        <header className="flex justify-between items-center mb-3 h-11">
-          <div>
-            <div className="flex items-center space-x-2">
-              <Wallet className="z-10">
-                <ConnectWallet>
-                  <Name className="text-inherit" />
-                </ConnectWallet>
-                <WalletDropdown>
-                  <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                    <Avatar />
-                    <Name />
-                    <Address />
-                    <EthBalance />
-                  </Identity>
-                  <WalletDropdownDisconnect />
-                </WalletDropdown>
-              </Wallet>
+    <div className="space-y-6">
+      <Card title="Ubizo - Your Safety Net">
+        <p className="mb-4 text-gray-600">Manage your safety circle and trigger an SOS when you need help.</p>
+        <Button onClick={handleSOS} variant="primary" size="lg" disabled={isLoading || trustedContacts.length === 0}>
+          {isLoading ? "Sending..." : "SEND SOS"}
+        </Button>
+      </Card>
+
+      <Card title="Safety Circle">
+        <div className="space-y-4">
+          {trustedContacts.map((contact, index) => (
+            <div key={index} className="flex items-center justify-between bg-gray-100 p-2 rounded">
+              <div>
+                <p className="font-semibold">{contact.name}</p>
+                <p className="text-sm text-gray-500">{contact.phone}</p>
+              </div>
+              <Button variant="secondary" size="sm" onClick={() => handleRemoveContact(index)}>
+                Remove
+              </Button>
             </div>
+          ))}
+          <div className="space-y-2">
+            <Label htmlFor="contact-name">Name</Label>
+            <Input
+              id="contact-name"
+              placeholder="e.g., Jane Doe"
+              value={newContactName}
+              onChange={(e) => setNewContactName(e.target.value)}
+            />
+            <Label htmlFor="contact-phone">Phone</Label>
+            <Input
+              id="contact-phone"
+              placeholder="e.g., +1234567890"
+              value={newContactPhone}
+              onChange={(e) => setNewContactPhone(e.target.value)}
+            />
+            <Button variant="secondary" onClick={handleAddContact}>
+              Add Contact
+            </Button>
           </div>
-          <div>{saveFrameButton}</div>
-        </header>
-
-        <main className="flex-1">
-          {activeTab === "home" && <Home setActiveTab={setActiveTab} />}
-          {activeTab === "features" && <Features setActiveTab={setActiveTab} />}
-        </main>
-
-        <footer className="mt-2 pt-4 flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[var(--ock-text-foreground-muted)] text-xs"
-            onClick={() => openUrl("https://base.org/builders/minikit")}
-          >
-            Built on Base with MiniKit
+          <Button onClick={handleSaveCircle} disabled={isLoading} variant="outline">
+            {isLoading ? "Saving..." : "Save Circle"}
           </Button>
-        </footer>
-      </div>
+        </div>
+      </Card>
     </div>
+  );
+}
+
+// ----- Page Wrapper -----
+export default function Page() {
+  const { isConnected } = useAccount();
+
+  return (
+    <main className={`flex min-h-screen flex-col items-center p-6`}>
+      <div className="w-full max-w-md space-y-8">
+        {isConnected ? (
+          <UbizoApp />
+        ) : (
+          <div className="text-center">
+            <h1 className="text-2xl font-bold mb-4">Welcome to Ubizo</h1>
+            <p className="text-gray-500">Please connect your wallet to continue.</p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }

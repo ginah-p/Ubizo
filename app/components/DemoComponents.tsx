@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { useAccount } from "wagmi";
 import {
   Transaction,
@@ -78,12 +78,7 @@ type CardProps = {
   onClick?: () => void;
 }
 
-function Card({
-  title,
-  children,
-  className = "",
-  onClick,
-}: CardProps) {
+export function Card({ title, children, className = "", onClick }: CardProps) {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (onClick && (e.key === "Enter" || e.key === " ")) {
       e.preventDefault();
@@ -458,5 +453,72 @@ function TransactionCard() {
         </div>
       </div>
     </Card>
+  );
+}
+
+export function Input({
+  id,
+  placeholder,
+  value,
+  onChange,
+}: {
+  id: string;
+  placeholder: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}) {
+  return (
+    <input
+      id={id}
+      type="text"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      className="w-full px-3 py-2 border rounded-md bg-gray-50 dark:bg-gray-800 border-gray-300 dark:border-gray-700"
+    />
+  );
+}
+
+export function Label({
+  htmlFor,
+  children,
+}: {
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="block text-sm font-medium text-[var(--app-foreground-muted)]"
+    >
+      {children}
+    </label>
+  );
+}
+
+export function Toast({
+  message,
+  show,
+  onDismiss,
+}: {
+  message: string;
+  show: boolean;
+  onDismiss: () => void;
+}) {
+  useEffect(() => {
+    if (show) {
+      const timer = setTimeout(() => {
+        onDismiss();
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [show, onDismiss]);
+
+  if (!show) return null;
+
+  return (
+    <div className="fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg animate-fade-in">
+      {message}
+    </div>
   );
 }

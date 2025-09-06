@@ -4,7 +4,7 @@ import { SafetyCircle, SOSPayload } from '@/lib/sos-types';
 
 // This would be a more robust notification client
 // For now, we just log to the console
-async function sendNotifications(circle: SafetyCircle, payload: SOSPayload) {
+async function sendNotifications(circle: SafetyCircle) {
     console.log(`Sending SOS to ${circle.contacts.length} contacts`);
     for (const contact of circle.contacts) {
         console.log(`Notifying ${contact.name}`);
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Send notifications to contacts
-    await sendNotifications(safetyCircle, payload);
+    await sendNotifications(safetyCircle);
 
     // 3. Log SOS to blockchain
     const tx = await logSOSToBlockchain(payload);
