@@ -9,7 +9,7 @@ export async function GET() {
       "splashImageUrl": "https://ubizo-ur79.vercel.app/splash.png",
       "splashBackgroundColor": "#ffffff",
       "webhookUrl": "https://ubizo-ur79.vercel.app/api/webhook",
-      "subtitle": "Safety circle & SOS app",
+      "subtitle": "Safety circle SOS app",
       "description": "Ubizo is a decentralized application that allows users to create a safety circle of trusted contacts and send SOS alerts in case of an emergency.",
       "primaryCategory": "education"
     },
