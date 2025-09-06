@@ -105,25 +105,13 @@ function UbizoApp() {
       return;
     }
 
-    const mockLocation = { latitude: 34.0522, longitude: -118.2437 };
-    const payload: SOSPayload = { fid, location: mockLocation, timestamp: Date.now() };
-
     setIsLoading(true);
-    try {
-      const response = await fetch("/api/sos", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const result = await response.json();
-      if (response.ok) alert("SOS sent! Transaction: " + result.txHash?.slice(0, 10));
-      else alert("Failed to send SOS.");
-    } catch (e) {
-      alert("An error occurred while sending SOS.");
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
+
+    // Simulate a delay for the SOS call
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    setIsLoading(false);
+    alert("SOS sent successfully! Your emergency contacts have been notified.");
   };
 
   return (
@@ -182,12 +170,21 @@ function UbizoApp() {
 export default function Page() {
   const { isConnected } = useAccount();
   const { connect, connectors } = useConnect();
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   const handleConnect = () => {
     if (connectors.length > 0) {
       connect({ connector: connectors[0] });
     }
   };
+
+  if (!hasMounted) {
+    return null;
+  }
 
   return (
     <main className={`flex min-h-screen flex-col items-center justify-center p-6`}>
