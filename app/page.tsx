@@ -7,7 +7,6 @@ import './theme.css';
 // ----- Inline Types -----
 type TrustedContact = { name: string; phone: string };
 type SafetyCircle = { ownerFid: string; contacts: TrustedContact[] };
-type SOSPayload = { fid: string; location: { latitude: number; longitude: number }; timestamp: number };
 
 // ----- Minimal Components -----
 const Card = ({ title, children, className }: { title?: string; children: ReactNode, className?: string }) => (
