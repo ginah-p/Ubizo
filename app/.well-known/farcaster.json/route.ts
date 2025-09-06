@@ -15,12 +15,12 @@ export async function GET() {
   const URL = process.env.NEXT_PUBLIC_URL;
 
   return Response.json({
-    accountAssociation: {
-      header: process.env.FARCASTER_HEADER,
-      payload: process.env.FARCASTER_PAYLOAD,
-      signature: process.env.FARCASTER_SIGNATURE,
+    "accountAssociation": {
+      "header": "eyJmaWQiOjEzMjY0NTYsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg5YjY5QzdDQTVlMDM0QjJFMjc4MzE1MWI1MmQzOUE1MWUwZDRBNEFEIn0",
+      "payload": "eyJkb21haW4iOiJ1Yml6by11cjc5LnZlcmNlbC5hcHAifQ",
+      "signature": "MHhlZDQ0OGFhMjUzNmJhYTIxOGE4OGFiOTAzMTU2Y2Y3OTI4NDRkYmY4ODk1Y2Q5ODk1NWMxYjlhMjY5M2ZkMmI0NjBiYzUxNjNjOTY5Y2U3ZTNiMmE3N2ZhZmFhMmUzZDdlMzBlNzVlOWI3MTY5Mzk3Y2RlMzA3NmM2ZmRjMWJmOTFj"
     },
-    frame: withValidProperties({
+    frames: withValidProperties({
       version: "1",
       name: process.env.NEXT_PUBLIC_ONCHAINKIT_PROJECT_NAME,
       subtitle: process.env.NEXT_PUBLIC_APP_SUBTITLE,
