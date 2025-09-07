@@ -11,7 +11,12 @@ export async function GET() {
       "webhookUrl": "https://ubizo-ur79.vercel.app/api/webhook",
       "subtitle": "Safety circle SOS app",
       "description": "Ubizo is a decentralized application that allows users to create a safety circle of trusted contacts and send SOS alerts in case of an emergency.",
-      "primaryCategory": "education"
+      "primaryCategory": "utility",
+      "tags": [
+        "women",
+        "gbv",
+        "children"
+      ]
     },
     "accountAssociation": {
       "header": "eyJmaWQiOjEzMjY0NTYsInR5cGUiOiJjdXN0b2R5Iiwia2V5IjoiMHg5YjY5QzdDQTVlMDM0QjJFMjc4MzE1MWI1MmQzOUE1MWUwZDRBNEFEIn0",
