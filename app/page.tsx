@@ -38,6 +38,7 @@ function UbizoApp() {
   const [newContactName, setNewContactName] = useState("");
   const [newContactPhone, setNewContactPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sosSent, setSosSent] = useState(false);
 
   const fid = address;
 
@@ -110,8 +111,20 @@ function UbizoApp() {
     await new Promise(resolve => setTimeout(resolve, 1500));
 
     setIsLoading(false);
-    alert("SOS sent successfully! Your emergency contacts have been notified.");
+    setSosSent(true);
   };
+
+  if (sosSent) {
+    return (
+      <Card title="SOS Sent!" className="text-center">
+        <p className="mb-4 text-lg font-semibold">Help is on the way.</p>
+        <p className="mb-6">Your emergency contacts and local authorities have been notified.</p>
+        <Button onClick={() => setSosSent(false)} variant="primary">
+          All Clear
+        </Button>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-8 w-full">
