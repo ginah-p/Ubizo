@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback, ReactNode } from "react";
-import { useAccount, useConnect } from "wagmi";
+import { useAccount } from "wagmi";
+import { SignInButton, useProfile } from "@farcaster/auth-kit";
+import "@farcaster/auth-kit/styles.css";
 import './theme.css';
 
 // ----- Inline Types -----
@@ -180,19 +182,16 @@ function UbizoApp() {
 
 // ----- Page Wrapper -----
 export default function Page() {
-  const { isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
+  const { isAuthenticated } = useProfile();
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
+    // This is a placeholder for the SDK ready call
+    // In a real Farcaster Mini App, you would use the Mini App SDK
+    // For example: import { sdk } from '@farcaster/sdk'; sdk.ready();
+    console.log("Farcaster Mini App Ready!");
   }, []);
-
-  const handleConnect = () => {
-    if (connectors.length > 0) {
-      connect({ connector: connectors[0] });
-    }
-  };
 
   if (!hasMounted) {
     return null;
@@ -201,15 +200,13 @@ export default function Page() {
   return (
     <main className={`flex min-h-screen flex-col items-center justify-center p-6`}>
       <div className="w-full max-w-md">
-        {isConnected ? (
+        {isAuthenticated ? (
           <UbizoApp />
         ) : (
           <Card className="text-center">
             <h1 className="text-3xl font-bold mb-4">Welcome to Ubizo</h1>
             <p className="mb-6">Please connect your wallet to continue.</p>
-            <Button onClick={handleConnect} variant="primary">
-              Connect Wallet
-            </Button>
+            <SignInButton />
           </Card>
         )}
       </div>
