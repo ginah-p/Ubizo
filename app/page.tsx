@@ -1,9 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, ReactNode } from "react";
-import { useAccount } from "wagmi";
-import { SignInButton, useProfile } from "@farcaster/auth-kit";
-import "@farcaster/auth-kit/styles.css";
+import { useState, useEffect, useCallback, ReactNode } from 'react';
+import { useAccount, useConnect } from 'wagmi';
+import { sdk } from '@farcaster/miniapp-sdk';
 import './theme.css';
 
 // ----- Inline Types -----
@@ -182,16 +181,29 @@ function UbizoApp() {
 
 // ----- Page Wrapper -----
 export default function Page() {
-  const { isAuthenticated } = useProfile();
+  const { isConnected } = useAccount();
+  const { connect, connectors } = useConnect();
   const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
     setHasMounted(true);
-    // This is a placeholder for the SDK ready call
-    // In a real Farcaster Mini App, you would use the Mini App SDK
-    // For example: import { sdk } from '@farcaster/sdk'; sdk.ready();
-    console.log("Farcaster Mini App Ready!");
+    if (window.parent !== window) {
+      try {
+        sdk.actions.ready();
+        console.log("Farcaster Mini App SDK ready signal sent.");
+      } catch (error) {
+        console.error("Farcaster Mini App SDK not available.", error);
+      }
+    } else {
+      console.log("Not running in Farcaster, so not sending ready signal.");
+    }
   }, []);
+
+  const handleConnect = () => {
+    if (connectors.length > 0) {
+      connect({ connector: connectors[0] });
+    }
+  };
 
   if (!hasMounted) {
     return null;
@@ -200,13 +212,15 @@ export default function Page() {
   return (
     <main className={`flex min-h-screen flex-col items-center justify-center p-6`}>
       <div className="w-full max-w-md">
-        {isAuthenticated ? (
+        {isConnected ? (
           <UbizoApp />
         ) : (
           <Card className="text-center">
             <h1 className="text-3xl font-bold mb-4">Welcome to Ubizo</h1>
             <p className="mb-6">Please connect your wallet to continue.</p>
-            <SignInButton />
+            <Button onClick={handleConnect} variant="primary">
+              Connect Wallet
+            </Button>
           </Card>
         )}
       </div>
